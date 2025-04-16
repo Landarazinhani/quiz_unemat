@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz</title>
+    <style>
+        body {
+            background-color: #f3f3f3;
+            font-family: sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2e7d32;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .opcao {
+            display: block;
+            width: 100%;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 30px;
+            padding: 0.8rem 1.2rem;
+            margin-bottom: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .opcao:hover {
+            background: #f0f0f0;
+        }
+
+        .selecionada {
+            background: #ffeb3b !important;
+            border-color: #fbc02d;
+        }
+
+        .botao-proxima {
+            margin-top: 1rem;
+            background: #2e7d32;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .botao-proxima:hover {
+            background: #1b5e20;
+        }
+
+        .mensagem-final {
+            font-size: 1.2rem;
+            color: #2e7d32;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>UNEMAT</h1>
+        <div id="pergunta-container"></div>
+    </div>
+
+    <script>
+        const perguntas = {{ perguntas | tojson | safe }};
+        let indiceAtual = 0;
+
+        function exibirPergunta() {
+            const container = document.getElementById("pergunta-container");
+            container.innerHTML = "";
+
+            if (indiceAtual >= perguntas.length) {
+                container.innerHTML = `
+                    <h2 class="mensagem-final">Concluído</h2>
+                    <p class="mensagem-final">Obrigado por sua participação!</p>
+                `;
+                return;
+            }
+
+            const pergunta = perguntas[indiceAtual];
+            const html = `
+                <div>
+                    <h2>${pergunta.pergunta}</h2>
+                    ${Object.entries(pergunta.alternativas).map(([letra, texto]) => `
+                        <button
+                            class="opcao"
+                            onclick="responder(this, '${letra}', ${pergunta.id})"
+                        >
+                            ${letra}) ${texto}
+                        </button>
+                    `).join("")}
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function responder(botaoClicado, respostaUsuario, perguntaId) {
+            const opcoes = document.querySelectorAll(".opcao");
+            opcoes.forEach(btn => btn.disabled = true);
+            botaoClicado.classList.add("selecionada");
+
+            fetch(`/api/responder/${perguntaId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ resposta: respostaUsuario })
+            }).then(res => res.json())
+              .then(data => console.log("Resposta registrada:", data))
+              .catch(err => console.error("Erro ao enviar resposta:", err));
+
+            const proximaBtn = document.createElement("button");
+            proximaBtn.textContent = "Próxima";
+            proximaBtn.className = "botao-proxima";
+            proximaBtn.onclick = () => {
+                indiceAtual++;
+                exibirPergunta();
+            };
+            document.getElementById("pergunta-container").appendChild(proximaBtn);
+        }
+
+        window.onload = () => {
+            exibirPergunta();
+        };
+    </script>
+</body>
+</html>

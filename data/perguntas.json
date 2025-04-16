@@ -1,0 +1,112 @@
+[
+  {
+    "id": 1,
+    "pergunta": "Conforme a Lei Complementar nº 534/2014, qual é o regime de trabalho docente preferencial na UNEMAT?",
+    "alternativas": {
+      "A": "Tempo Parcial – 20 horas semanais",
+      "B": " Tempo Integral – 40 horas semanais, sem dedicação exclusiva",
+      "C": "Tempo Integral – 40 horas semanais, com Dedicação Exclusiva",
+      "D": "Horista, conforme demanda da unidade"
+    },
+    "correta": "C"
+  },
+  {
+    "id": 2,
+    "pergunta": "Quais atividades compõem a jornada de trabalho do docente em Dedicação Exclusiva na UNEMAT?",
+    "alternativas": {
+      "A": "Ensino e pesquisa",
+      "B": " Ensino, pesquisa, extensão e, eventualmente, gestão universitária ",
+      "C": " Ensino e extensão",
+      "D": " Apenas ensino"
+    },
+    "correta": "B"
+  },
+  {
+    "id": 3,
+    "pergunta": "A carga horária de 12 horas semanais em ensino corresponde a quantas horas semestrais?",
+    "alternativas": {
+      "A": "120 horas",
+      "B": " 150 horas",
+      "C": "180 horas ",
+      "D": " 200 horas"
+    },
+    "correta": "C"
+  },
+  {
+    "id": 4,
+    "pergunta": " Quantos créditos equivalem às 180 horas semestrais de atividades de ensino?",
+    "alternativas": {
+      "A": "10 créditos",
+      "B": " 12 créditos",
+      "C": "15 créditos",
+      "D": "20 créditos"
+    },
+    "correta": "B"
+  },
+  {
+    "id": 5,
+    "pergunta": " Se um docente ministra 60 horas na pós-graduação, o que mais ele deve fazer para cumprir a carga mínima semestral de ensino?",
+    "alternativas": {
+      "A": " Nenhuma atividade adicional",
+      "B": "Ministrar uma disciplina de 30 horas na graduação",
+      "C": "Ministrar uma disciplina de 60 horas na graduação ",
+      "D": "Atuar em extensão universitária"
+    },
+    "correta": "C"
+  },
+  {
+    "id": 6,
+    "pergunta": "Por quanto tempo um docente, em cargo de gestão, pode atuar exclusivamente na pós-graduação sem ministrar aulas na graduação?",
+    "alternativas": {
+      "A": "3 meses",
+      "B": "6 meses ",
+      "C": "1 ano",
+      "D": "Não há limite de tempo"
+    },
+    "correta": "B"
+  },
+  {
+    "id": 7,
+    "pergunta": " A comprovação da necessidade de contratação por divisão de turma deve ser feita com:",
+    "alternativas": {
+      "A": "Declaração do professor da disciplina",
+      "B": "Declaração do coordenador do curso",
+      "C": "Lista de alunos matriculados e/ou prováveis matriculados",
+      "D": " Parecer do Colegiado da Faculdade"
+    },
+    "correta": "C"
+  },
+  {
+    "id": 8,
+    "pergunta": "Qual é o prazo mínimo permitido para a contratação temporária de professor?",
+    "alternativas": {
+      "A": "15 dias, salvo exceção por motivo de saúde",
+      "B": " 30 dias, salvo exceção por motivo de saúde",
+      "C": "45 dias, salvo exceção por motivo de saúde",
+      "D": "Não há prazo mínimo estabelecido"
+    },
+    "correta": "B"
+  },
+  {
+    "id": 9,
+    "pergunta": "Qual é o tempo máximo de contratação (com prorrogação) de um professor substituto, conforme a LC nº 600/2017?",
+    "alternativas": {
+      "A": "24 meses",
+      "B": "36 meses",
+      "C": "48 meses",
+      "D": "60 meses "
+    },
+    "correta": "D"
+  },
+  {
+    "id": 10,
+    "pergunta": " Caso o contrato de um professor substituto seja encerrado, ele só poderá ser recontratado após:",
+    "alternativas": {
+      "A": "20 dias",
+      "B": "30 dias",
+      "C": "40 dias ",
+      "D": "60 dias"
+    },
+    "correta": "C"
+  }
+]

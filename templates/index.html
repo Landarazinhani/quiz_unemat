@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Bem-vindo ao Quiz UNEMAT</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      text-align: center;
+      font-family: sans-serif;
+      padding: 2rem;
+      background-color: #f3f3f3;
+    }
+
+    img.logo {
+      width: 220px;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      color: #2e7d32;
+    }
+
+    a {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #2e7d32;
+      color: #fff;
+      border-radius: 8px;
+      margin-top: 20px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    a:hover {
+      background: #1b5e20;
+    }
+  </style>
+</head>
+<body>
+  <!-- ✅ Logo UNEMAT -->
+  <img src="{{ url_for('static', filename='logo_unemat.png') }}" alt="Logo UNEMAT" class="logo">
+
+  <h1>Bem-vindo(a) ao Questionario!</h1>
+  <p>Faça login com seu e-mail institucional para começar.</p>
+
+  <a href="{{ url_for('google.login') }}">Entrar com Google</a>
+</body>
+</html>

@@ -1,0 +1,68 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  padding: 2rem;
+  max-width: 600px;
+  margin: auto;
+}
+
+.pergunta {
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.opcao {
+  display: flex;
+  align-items: center;
+  border: 2px solid #ccc;
+  border-radius: 999px;
+  padding: 12px 20px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #fff;
+}
+
+.opcao .letra {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.opcao.correta {
+  background-color: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
+.opcao.correta::before {
+  content: "✔";
+  margin-right: 10px;
+}
+
+.btn-proxima {
+  margin-top: 20px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  background-color: #00796b;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-proxima:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-proxima:hover:not(:disabled) {
+  background-color: #004d40;
+}
+
+.selecionada {
+  background-color: #facc15 !important; /* amarelo */
+  color: #000 !important;
+  border-color: #eab308 !important;
+}

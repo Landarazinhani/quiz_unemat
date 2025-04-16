@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel Administrativo - Quiz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-green-700 text-center w-full">Painel Administrativo</h1>
+      <a href="/logout" class="inline-flex items-center gap-2 bg-red-100 text-red-700 font-semibold px-4 py-2 rounded hover:bg-red-200 transition ml-auto">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1" />
+        </svg>
+        Sair
+      </a>
+    </div>
+
+    <!-- ✅ Total de Participantes -->
+    <div class="bg-green-100 border border-green-300 text-green-800 rounded-lg p-4 mb-6 text-center">
+      <p class="text-lg font-semibold">Total de Participantes:</p>
+      <p class="text-4xl mt-2">{{ total_participantes }}</p>
+    </div>
+
+    <!-- ✅ Botão para resetar contadores -->
+    <div class="text-center mb-8">
+      <button onclick="resetarContadores()"
+              class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+        🔄 Reiniciar Contadores
+      </button>
+    </div>
+
+    <!-- ✅ Perguntas -->
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-800 mb-4">Perguntas Cadastradas</h2>
+      <ul class="space-y-6">
+        {% for p in perguntas %}
+          <li class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <p class="font-medium text-gray-700 mb-2">#{{ p.id }} - {{ p.pergunta }}</p>
+
+            <!-- ✅ Alternativas com contador -->
+            <div class="space-y-2 mt-2" id="alternativas-{{ p.id }}">
+              {% set total_respostas = 0 %}
+              {% for letra, texto in p.alternativas.items() %}
+                {% set count = respostas.get(p.id|string, {}).get(letra, 0) %}
+                {% set total_respostas = total_respostas + count %}
+                <div class="flex items-center justify-between px-4 py-2 rounded border transition 
+                            {% if letra == p.correta %}correta-{{ p.id }}{% endif %}"
+                     id="opcao-{{ p.id }}-{{ letra }}">
+                  <span>{{ letra }}) {{ texto }}</span>
+                  <span class="text-sm text-gray-600">{{ count }} resposta(s)</span>
+                </div>
+              {% endfor %}
+              <p class="text-right text-sm text-gray-500 mt-1">Total de respostas: {{ total_respostas }}</p>
+            </div>
+
+            <!-- ✅ Botão de Mostrar Resposta -->
+            <button onclick="toggleResposta({{ p.id }}, '{{ p.correta }}')"
+                    class="mt-4 text-sm text-white bg-green-600 px-4 py-2 rounded hover:bg-green-700 transition">
+              Mostrar Resposta
+            </button>
+
+            <div class="flex gap-3 mt-4">
+              <!-- Editar -->
+              <button onclick="abrirModalEdicao({{ p.id }})"
+                      class="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700 transition">
+                 Editar
+              </button>
+            
+              <!-- Excluir -->
+              <button onclick="excluirPergunta({{ p.id }})"
+                      class="bg-red-600 text-white text-sm px-4 py-2 rounded hover:bg-red-700 transition">
+                 Excluir
+              </button>
+            </div>
+            
+
+            <!-- ✅ Balão de resposta certa -->
+            <div id="resposta-{{ p.id }}" class="hidden mt-4">
+              <div class="bg-green-100 border border-green-300 text-green-800 rounded-lg px-4 py-3 shadow ring-2 ring-green-300">
+                ✅ Resposta correta: <strong>{{ p.correta }}) {{ p.alternativas[p.correta] }}</strong>
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    function toggleResposta(id, correta) {
+      const respostaBox = document.getElementById(`resposta-${id}`);
+      const alternativa = document.getElementById(`opcao-${id}-${correta}`);
+
+      // Alterna o balão
+      respostaBox.classList.toggle("hidden");
+
+      // Alterna o destaque da alternativa correta
+      if (alternativa.classList.contains("bg-green-100")) {
+        alternativa.classList.remove("bg-green-100", "border-green-400", "text-green-800");
+        alternativa.classList.add("border-gray-200");
+      } else {
+        alternativa.classList.add("bg-green-100", "border-green-400", "text-green-800");
+        alternativa.classList.remove("border-gray-200");
+      }
+    }
+
+    function resetarContadores() {
+      if (confirm("Tem certeza que deseja reiniciar todos os contadores? Isso apagará todas as respostas.")) {
+        fetch("/resetar-respostas", { method: "POST" })
+          .then(res => res.json())
+          .then(data => {
+            alert("Contadores reiniciados com sucesso!");
+            location.reload();
+          })
+          .catch(err => {
+            alert("Erro ao resetar contadores.");
+            console.error(err);
+          });
+      }
+    }
+  </script>
+
+  <!-- Modal de Edição -->
+<div id="modal-edicao" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-xl shadow-xl">
+    <h2 class="text-xl font-bold mb-4">Editar Pergunta</h2>
+    <form id="form-edicao">
+      <input type="hidden" id="edit-id">
+
+      <label class="block font-medium mb-1">Pergunta:</label>
+      <input id="edit-pergunta" class="w-full border px-3 py-2 rounded mb-4" required>
+
+      <label class="block font-medium mb-1">Alternativas:</label>
+      <div id="edit-alternativas" class="space-y-2 mb-4">
+        <!-- inputs dinamicamente -->
+      </div>
+
+      <label class="block font-medium mb-1">Letra da Correta:</label>
+      <input id="edit-correta" class="w-full border px-3 py-2 rounded mb-4" required>
+
+      <div class="flex justify-between mt-6">
+        <button type="button" onclick="fecharModalEdicao()" class="text-gray-600 hover:underline">Cancelar</button>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function abrirModalEdicao(id) {
+    fetch(`/api/pergunta/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("edit-id").value = id;
+        document.getElementById("edit-pergunta").value = data.pergunta;
+
+        const alternativasDiv = document.getElementById("edit-alternativas");
+        alternativasDiv.innerHTML = "";
+
+        const letras = ["A", "B", "C", "D", "E"];
+        data.opcoes.forEach((texto, i) => {
+          const letra = letras[i];
+          const input = document.createElement("input");
+          input.className = "w-full border px-3 py-2 rounded";
+          input.name = letra;
+          input.placeholder = `${letra}) alternativa`;
+          input.value = texto;
+          alternativasDiv.appendChild(input);
+        });
+
+        document.getElementById("modal-edicao").classList.remove("hidden");
+      });
+  }
+
+  function fecharModalEdicao() {
+    document.getElementById("modal-edicao").classList.add("hidden");
+  }
+
+  document.getElementById("form-edicao").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const id = document.getElementById("edit-id").value;
+    const pergunta = document.getElementById("edit-pergunta").value;
+    const correta = document.getElementById("edit-correta").value.toUpperCase();
+    const inputs = document.querySelectorAll("#edit-alternativas input");
+
+    const alternativas = {};
+    inputs.forEach(input => {
+      alternativas[input.name] = input.value;
+    });
+
+    fetch(`/api/editar/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pergunta, alternativas })
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert("Pergunta atualizada com sucesso!");
+      fecharModalEdicao();
+      location.reload();
+    });
+  });
+
+  function excluirPergunta(id) {
+    if (confirm("Tem certeza que deseja excluir esta pergunta?")) {
+      fetch(`/api/excluir/${id}`, { method: "DELETE" })
+        .then(res => res.json())
+        .then(data => {
+          alert("Pergunta excluída com sucesso!");
+          location.reload();
+        });
+    }
+  }
+</script>
+
+<script>
+  setInterval(() => {
+    fetch("/api/respostas")
+      .then(res => res.json())
+      .then(data => {
+        for (const pergunta_id in data) {
+          const respostas = data[pergunta_id];
+          let total = 0;
+          for (const letra in respostas) {
+            total += respostas[letra];
+            const span = document.querySelector(`#opcao-${pergunta_id}-${letra} span:last-child`);
+            if (span) span.textContent = `${respostas[letra]} resposta(s)`;
+          }
+          const totalEl = document.querySelector(`#alternativas-${pergunta_id} p.text-right`);
+          if (totalEl) totalEl.textContent = `Total de respostas: ${total}`;
+        }
+      });
+  }, 5000);
+</script>
+
+
+</body>
+</html>
