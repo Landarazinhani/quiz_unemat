@@ -287,4 +287,12 @@ def api_respostas():
     return jsonify(respostas)
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, host="0.0.0.0")
+    port = int(os.environ.get("PORT", 5000))  # Lê a porta do Render ou usa 5000 localmente
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=port,
+        debug=os.environ.get("DEBUG", "False") == "True"  # Debug só ativo localmente
+    )
+
+   
