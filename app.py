@@ -3,6 +3,17 @@ from flask_socketio import SocketIO, emit
 from flask_dance.contrib.google import make_google_blueprint, google
 import os
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Configurações do Google OAuth
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+GOOGLE_PROJECT_ID = os.getenv("GOOGLE_PROJECT_ID")
+GOOGLE_AUTH_URI = os.getenv("GOOGLE_AUTH_URI")
+GOOGLE_TOKEN_URI = os.getenv("GOOGLE_TOKEN_URI")
+GOOGLE_AUTH_PROVIDER_X509_CERT_URL = os.getenv("GOOGLE_AUTH_PROVIDER_X509_CERT_URL")
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -12,12 +23,10 @@ ADMIN_SENHA = "form123"
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-with open("client_secret.json", encoding="utf-8") as f:
-    secrets = json.load(f)["web"]
-
+# Configuração do blueprint do Google
 google_bp = make_google_blueprint(
-    client_id=secrets["client_id"],
-    client_secret=secrets["client_secret"],
+    client_id=GOOGLE_CLIENT_ID,
+    client_secret=GOOGLE_CLIENT_SECRET,
     scope=[
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/userinfo.profile",
@@ -26,7 +35,6 @@ google_bp = make_google_blueprint(
     redirect_to="quiz"
 )
 app.register_blueprint(google_bp, url_prefix="/login")
-
 
 @app.route("/")
 def home():
@@ -79,9 +87,9 @@ def admin():
     )
 
     return render_template("admin.html",
-                           perguntas=perguntas,
-                           respostas=respostas,
-                           total_participantes=total_participantes)
+                         perguntas=perguntas,
+                         respostas=respostas,
+                         total_participantes=total_participantes)
 
 @app.route("/logout-admin")
 def logout_admin():
