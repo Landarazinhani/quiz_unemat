@@ -7,34 +7,29 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configurações do Google OAuth
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-GOOGLE_PROJECT_ID = os.getenv("GOOGLE_PROJECT_ID")
-GOOGLE_AUTH_URI = os.getenv("GOOGLE_AUTH_URI")
-GOOGLE_TOKEN_URI = os.getenv("GOOGLE_TOKEN_URI")
-GOOGLE_AUTH_PROVIDER_X509_CERT_URL = os.getenv("GOOGLE_AUTH_PROVIDER_X509_CERT_URL")
-
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 app.secret_key = "segredo123"
 
 ADMIN_SENHA = "form123"
 
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+# Configurações do Google OAuth
+os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
+if os.getenv("FLASK_ENV") == "development":
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+os.environ["REDIRECT_URI"] = "https://quiz-unemat.onrender.com/login/google/authorized"
 
-# Configuração do blueprint do Google
 google_bp = make_google_blueprint(
-    client_id=GOOGLE_CLIENT_ID,
-    client_secret=GOOGLE_CLIENT_SECRET,
-    scope=[
-        "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/userinfo.profile",
-        "openid"
-    ],
-    redirect_to="quiz"
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    scope=["email", "profile"],
+    redirect_to="quiz",
+    authorized_url="https://quiz-unemat.onrender.com/login/google/authorized"
 )
 app.register_blueprint(google_bp, url_prefix="/login")
+
+# 🧠 Armazenamento em memória (reseta quando reiniciar)
+respostas_em_memoria = {}
 
 @app.route("/")
 def home():
@@ -64,6 +59,28 @@ def quiz():
 
     return render_template("quiz.html", email=email, perguntas=perguntas)
 
+@app.route("/api/responder/<int:pid>", methods=["POST"])
+def responder(pid):
+    dados = request.get_json()
+    resposta = dados.get("resposta")
+    pid_str = str(pid)
+
+    if pid_str not in respostas_em_memoria:
+        respostas_em_memoria[pid_str] = {}
+
+    if resposta not in respostas_em_memoria[pid_str]:
+        respostas_em_memoria[pid_str][resposta] = 0
+
+    respostas_em_memoria[pid_str][resposta] += 1
+
+    socketio.emit("nova_resposta", {
+        "pergunta_id": pid,
+        "resposta": resposta,
+        "total": respostas_em_memoria[pid_str][resposta]
+    }, broadcast=True)
+
+    return jsonify({"status": "ok"})
+
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
     if request.method == "POST":
@@ -79,17 +96,15 @@ def admin():
     with open("data/perguntas.json", encoding="utf-8") as f:
         perguntas = json.load(f)
 
-    with open("data/respostas.json", encoding="utf-8") as f:
-        respostas = json.load(f)
-
+    respostas = respostas_em_memoria
     total_participantes = sum(
         sum(alternativas.values()) for alternativas in respostas.values()
     )
 
     return render_template("admin.html",
-                         perguntas=perguntas,
-                         respostas=respostas,
-                         total_participantes=total_participantes)
+                           perguntas=perguntas,
+                           respostas=respostas,
+                           total_participantes=total_participantes)
 
 @app.route("/logout-admin")
 def logout_admin():
@@ -114,163 +129,21 @@ def get_pergunta(pid):
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
-@app.route("/api/responder/<int:pid>", methods=["POST"])
-def responder(pid):
-    dados = request.get_json()
-    resposta = dados.get("resposta")
-
-    with open("data/respostas.json", "r", encoding="utf-8") as f:
-        respostas = json.load(f)
-
-    pid_str = str(pid)
-    if pid_str not in respostas:
-        respostas[pid_str] = {}
-
-    if resposta not in respostas[pid_str]:
-        respostas[pid_str][resposta] = 0
-
-    respostas[pid_str][resposta] += 1
-
-    with open("data/respostas.json", "w", encoding="utf-8") as f:
-        json.dump(respostas, f, ensure_ascii=False, indent=2)
-
-    socketio.emit("nova_resposta", {
-        "pergunta_id": pid,
-        "resposta": resposta,
-        "total": respostas[pid_str][resposta]
-    }, broadcast=True)
-
-    return jsonify({"status": "ok"})
-
-@app.route("/responder-simples", methods=["POST"])
-def responder_simples():
-    data = request.json
-    pergunta_id = str(data["id"])
-    resposta = data["resposta"]
-
-    try:
-        with open("data/respostas.json", "r", encoding="utf-8") as f:
-            respostas = json.load(f)
-    except FileNotFoundError:
-        respostas = {}
-
-    if pergunta_id not in respostas:
-        respostas[pergunta_id] = {}
-    if resposta not in respostas[pergunta_id]:
-        respostas[pergunta_id][resposta] = 0
-
-    respostas[pergunta_id][resposta] += 1
-
-    with open("data/respostas.json", "w", encoding="utf-8") as f:
-        json.dump(respostas, f, indent=2, ensure_ascii=False)
-
-    return jsonify({"status": "ok"})
-
 @app.route("/resetar-respostas", methods=["POST"])
 def resetar_respostas():
-    with open("data/perguntas.json", "r", encoding="utf-8") as f:
-        perguntas = json.load(f)
-
-    respostas_resetadas = {
-        str(p["id"]): {letra: 0 for letra in p["alternativas"].keys()}
-        for p in perguntas
-    }
-
-    with open("data/respostas.json", "w", encoding="utf-8") as f:
-        json.dump(respostas_resetadas, f, indent=2, ensure_ascii=False)
-
+    respostas_em_memoria.clear()
     return jsonify({"status": "respostas resetadas"})
 
 @app.route("/resultado")
 def resultado():
     email = session.get("email", "Desconhecido")
 
-    with open("data/respostas.json", encoding="utf-8") as f:
-        respostas = json.load(f)
-
     with open("data/perguntas.json", encoding="utf-8") as f:
         perguntas = json.load(f)
 
+    respostas = respostas_em_memoria
+
     return render_template("resultado.html", email=email, respostas=respostas, perguntas=perguntas)
-
-@app.route("/api/editar/<int:pid>", methods=["POST"])
-def editar_pergunta(pid):
-    dados = request.get_json()
-
-    with open("data/perguntas.json", "r", encoding="utf-8") as f:
-        perguntas = json.load(f)
-
-    for i, p in enumerate(perguntas):
-        if p["id"] == pid:
-            perguntas[i]["pergunta"] = dados.get("pergunta", p["pergunta"])
-            perguntas[i]["alternativas"] = dados.get("alternativas", p["alternativas"])
-            break
-    else:
-        return jsonify({"erro": "Pergunta não encontrada"}), 404
-
-    with open("data/perguntas.json", "w", encoding="utf-8") as f:
-        json.dump(perguntas, f, indent=2, ensure_ascii=False)
-
-    return jsonify({"status": "pergunta editada"})
-
-@app.route("/api/excluir/<int:pid>", methods=["DELETE"])
-def excluir_pergunta(pid):
-    with open("data/perguntas.json", "r", encoding="utf-8") as f:
-        perguntas = json.load(f)
-
-    perguntas = [p for p in perguntas if p["id"] != pid]
-
-    with open("data/perguntas.json", "w", encoding="utf-8") as f:
-        json.dump(perguntas, f, indent=2, ensure_ascii=False)
-
-    return jsonify({"status": f"pergunta {pid} excluída"})
-
-@app.route("/api/adicionar", methods=["POST"])
-def adicionar_pergunta():
-    dados = request.get_json()
-    nova_pergunta = dados.get("pergunta")
-    alternativas = dados.get("alternativas")
-    correta = dados.get("correta")
-
-    if not nova_pergunta or not alternativas or correta not in alternativas:
-        return jsonify({"erro": "Dados inválidos"}), 400
-
-    with open("data/perguntas.json", "r", encoding="utf-8") as f:
-        perguntas = json.load(f)
-
-    novo_id = max([p["id"] for p in perguntas], default=0) + 1
-
-    nova = {
-        "id": novo_id,
-        "pergunta": nova_pergunta,
-        "alternativas": alternativas,
-        "correta": correta
-    }
-
-    perguntas.append(nova)
-
-    with open("data/perguntas.json", "w", encoding="utf-8") as f:
-        json.dump(perguntas, f, indent=2, ensure_ascii=False)
-
-    try:
-        with open("data/respostas.json", "r", encoding="utf-8") as f:
-            respostas = json.load(f)
-    except FileNotFoundError:
-        respostas = {}
-
-    respostas[str(novo_id)] = {letra: 0 for letra in alternativas.keys()}
-
-    with open("data/respostas.json", "w", encoding="utf-8") as f:
-        json.dump(respostas, f, indent=2, ensure_ascii=False)
-
-    return jsonify({"status": "pergunta adicionada", "id": novo_id})
-
-@app.route("/cadastrar", methods=["GET"])
-def cadastrar_pergunta():
-    if not session.get("admin_autenticado"):
-        return redirect(url_for("admin"))
-
-    return render_template("cadastrar.html")
 
 @app.route("/static/perguntas.json")
 def perguntas_estaticas():
@@ -278,21 +151,14 @@ def perguntas_estaticas():
 
 @app.route("/api/respostas")
 def api_respostas():
-    try:
-        with open("data/respostas.json", "r", encoding="utf-8") as f:
-            respostas = json.load(f)
-    except FileNotFoundError:
-        respostas = {}
-
-    return jsonify(respostas)
+    return jsonify(respostas_em_memoria)
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Lê a porta do Render ou usa 5000 localmente
+    port = int(os.environ.get("PORT", 5001))  # Porta diferente
     socketio.run(
         app,
         host="0.0.0.0",
         port=port,
-        debug=os.environ.get("DEBUG", "False") == "True"  # Debug só ativo localmente
+        debug=os.environ.get("DEBUG", "False") == "True"
     )
 
-   

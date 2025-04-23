@@ -108,5 +108,38 @@
       "D": "60 dias"
     },
     "correta": "C"
+  },
+  {
+    "id": 11,
+    "pergunta": "Quais as funções na gestão administrativa, com a carga horária de 40 horas semanais libera o docente das atividades didático-pedagógica?",
+    "alternativas": {
+      "A": "Reitoria; Vice-reitoria; Pró-reitorias e Diretoria de Unidade Regionalizada Político-Pedagógica - DPPF",
+      "B": "Reitoria; Vice-reitoria; Pró-reitorias e Diretoria de Faculdade;",
+      "C": "Reitoria; Vice-reitoria; Pró-reitorias e Coordenação de Curso de Graduação",
+      "D": "-"
+    },
+    "correta": "A"
+  },
+  {
+    "id": 12,
+    "pergunta": "O componente curricular (disciplina) será cancelado se a turma tiver número inferior há quantos estudantes matriculados?",
+    "alternativas": {
+      "A": "07 (sete) estudantes matriculados, salvo exceção se regulamentado no Projetos Pedagógicos de Curso - PPC",
+      "B": "05 (cinco) estudantes matriculados, salvo exceção se regulamentado no Projetos Pedagógicos de Curso - PPC",
+      "C": "08 (oito) estudantes matriculados, salvo exceção se regulamentado no Projetos Pedagógicos de Curso - PPC",
+      "D": "-"
+    },
+    "correta": "B"
+  },
+  {
+    "id": 13,
+    "pergunta": "Caso o componente curricular de 60H atribuído a um professor efetivo em exercício seja cancelado, a Faculdade realizará qual procedimento?",
+    "alternativas": {
+      "A": "Deixará como esta, pois cancelamento da turma não é de responsabilidade do professor efetivo",
+      "B": "A Faculdade apresentará ao professor efetivo um conjunto de componentes curriculares que estavam inicialmente atribuídos a professores temporários, possibilitando que ele escolha entre essas opções, promovendo assim, o remanejamento dos componentes.",
+      "C": "-",
+      "D": "-"
+    },
+    "correta": "B"
   }
 ]
