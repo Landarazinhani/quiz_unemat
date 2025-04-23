@@ -22,14 +22,21 @@ os.environ["REDIRECT_URI"] = "https://quiz-unemat.onrender.com/login/google/auth
 google_bp = make_google_blueprint(
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    scope=["email", "profile"],
-    redirect_to="quiz",
-    authorized_url="https://quiz-unemat.onrender.com/login/google/authorized"
+    scope=["email", "profile", "openid"],  # Adicione "openid" para fluxo OAuth 2.0
+    redirect_url="https://quiz-unemat.onrender.com/login/google/authorized",  # URL absoluta com HTTPS
+    redirect_to="quiz",  # Nome da rota de destino
+    authorized_url="https://quiz-unemat.onrender.com/login/google/authorized"  # Fixa a URL de callback
 )
 app.register_blueprint(google_bp, url_prefix="/login")
 
 # 🧠 Armazenamento em memória (reseta quando reiniciar)
 respostas_em_memoria = {}
+
+@app.route("/login/google/authorized")
+def google_callback():
+    if not google.authorized:
+        return redirect(url_for("google.login"))
+    # ... resto da lógica
 
 @app.route("/")
 def home():
