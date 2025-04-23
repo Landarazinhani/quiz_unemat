@@ -258,6 +258,25 @@ def adicionar_pergunta():
 
     return jsonify({"status": "pergunta adicionada", "id": novo_id})
 
+@app.route("/api/salvar-respostas", methods=["POST"])
+def salvar_respostas():
+    data = request.get_json()  # recebe JSON do frontend
+
+    try:
+        # tenta carregar as respostas anteriores
+        with open("data/respostas_usuarios.json", "r", encoding="utf-8") as f:
+            respostas = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        respostas = []
+
+    respostas.append(data)  # adiciona nova resposta
+
+    with open("data/respostas_usuarios.json", "w", encoding="utf-8") as f:
+        json.dump(respostas, f, indent=2, ensure_ascii=False)
+
+    return jsonify({"status": "resposta salva com sucesso"})
+
+
 @app.route("/cadastrar", methods=["GET"])
 def cadastrar_pergunta():
     if not session.get("admin_autenticado"):
