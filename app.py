@@ -31,17 +31,27 @@ os.environ["REDIRECT_URI"] = "https://quiz-unemat.onrender.com/login/google/auth
 
 # Configuração do blueprint do Google
 google_bp = make_google_blueprint(
-    client_id=os.getenv("GOOGLE_CLIENT_ID"),
-    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    scope=["email", "profile"],
+    client_id=GOOGLE_CLIENT_ID,  # Use a variável diretamente
+    client_secret=GOOGLE_CLIENT_SECRET,
+    scope=["email", "profile", "openid"],  # Adicione openid
     redirect_to="quiz",
-    # Adicione esta linha:
-    authorized_url="https://quiz-unemat.onrender.com/login/google/authorized"
+    authorized_url="https://quiz-unemat.onrender.com/login/google/authorized",  # URL absoluta
+    reprompt_consent=True  # Força nova tela de consentimento
 )
 
 
-
 app.register_blueprint(google_bp, url_prefix="/login")
+@app.route("/login/google/authorized")
+def google_authorized():
+    if not google.authorized:
+        return redirect(url_for("google.login"))
+    
+    resp = google.get("/oauth2/v2/userinfo")
+    if not resp.ok:
+        return "Falha na autenticação", 403
+        
+    # Resto da lógica de autenticação
+    return redirect(url_for("quiz"))
 
 @app.route("/")
 def home():
