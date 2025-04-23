@@ -38,6 +38,11 @@ def google_callback():
         return redirect(url_for("google.login"))
     # ... resto da lógica
 
+    @app.route("/debug-auth")
+def debug_auth():
+    print("URL de callback:", google.authorization_url())
+    return redirect(google.authorization_url()[0])
+
 @app.route("/")
 def home():
     return redirect(url_for("index"))
