@@ -7,51 +7,30 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configurações do Google OAuth
+# Config Google OAuth
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-GOOGLE_PROJECT_ID = os.getenv("GOOGLE_PROJECT_ID")
-GOOGLE_AUTH_URI = os.getenv("GOOGLE_AUTH_URI")
-GOOGLE_TOKEN_URI = os.getenv("GOOGLE_TOKEN_URI")
-GOOGLE_AUTH_PROVIDER_X509_CERT_URL = os.getenv("GOOGLE_AUTH_PROVIDER_X509_CERT_URL")
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
 app.secret_key = "segredo123"
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 ADMIN_SENHA = "form123"
 
-os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
-# Somente necessário localmente. No Render, use HTTPS!
+# Ambiente de desenvolvimento permite HTTP
 if os.getenv("FLASK_ENV") == "development":
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
-os.environ["REDIRECT_URI"] = "https://quiz-unemat.onrender.com/login/google/authorized"
-
-
-# Configuração do blueprint do Google
+# Blueprint do Google com redirect_uri correto
 google_bp = make_google_blueprint(
-    client_id=GOOGLE_CLIENT_ID,  # Use a variável diretamente
-    client_secret=GOOGLE_CLIENT_SECRET,
-    scope=["email", "profile", "openid"],  # Adicione openid
-    redirect_to="quiz",
-    authorized_url="https://quiz-unemat.onrender.com/login/google/authorized",  # URL absoluta
-    reprompt_consent=True  # Força nova tela de consentimento
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    scope=["email", "profile"],
+    redirect_to="quiz"
 )
 
-
 app.register_blueprint(google_bp, url_prefix="/login")
-@app.route("/login/google/authorized")
-def google_authorized():
-    if not google.authorized:
-        return redirect(url_for("google.login"))
-    
-    resp = google.get("/oauth2/v2/userinfo")
-    if not resp.ok:
-        return "Falha na autenticação", 403
-        
-    # Resto da lógica de autenticação
-    return redirect(url_for("quiz"))
 
 @app.route("/")
 def home():
@@ -103,10 +82,7 @@ def admin():
         sum(alternativas.values()) for alternativas in respostas.values()
     )
 
-    return render_template("admin.html",
-                         perguntas=perguntas,
-                         respostas=respostas,
-                         total_participantes=total_participantes)
+    return render_template("admin.html", perguntas=perguntas, respostas=respostas, total_participantes=total_participantes)
 
 @app.route("/logout-admin")
 def logout_admin():
@@ -286,7 +262,6 @@ def adicionar_pergunta():
 def cadastrar_pergunta():
     if not session.get("admin_autenticado"):
         return redirect(url_for("admin"))
-
     return render_template("cadastrar.html")
 
 @app.route("/static/perguntas.json")
@@ -304,12 +279,5 @@ def api_respostas():
     return jsonify(respostas)
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Lê a porta do Render ou usa 5000 localmente
-    socketio.run(
-        app,
-        host="0.0.0.0",
-        port=port,
-        debug=os.environ.get("DEBUG", "False") == "True"  # Debug só ativo localmente
-    )
-
-   
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port)
